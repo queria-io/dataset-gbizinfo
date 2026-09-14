@@ -17,6 +17,21 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # Checkpoint も同じカタログに push する。並行して走ると、後から push した側が
+    # 先の push の最中にカタログを変えてしまい、先の側が "The dataset changed while
+    # this push was running" で落ちる。Checkpoint は dataset-shared の reusable を
+    # 経由し、そちらの job が同じ group に入っているので、ここでも同じ group を書く。
+    # 上の workflow レベルの concurrency は Sync 同士しか直列化しない。
+    #
+    # 走っている側は止めない。push の途中で切ると、公開されたカタログと
+    # データファイルの対応が途中の状態で残る
+    concurrency:
+      group: queria-catalog-write
+      cancel-in-progress: false
+      # 既定の queue: single は pending を 1 つしか持てず、後から来た run が
+      # 待っている run を蹴る。月 1 回の Checkpoint が日次の列に埋もれないよう、
+      # 待てる数を増やす
+      queue: max
     env:
       PYTHONUNBUFFERED: "1"
       GBIZINFO_SYNC_MODE: activity
