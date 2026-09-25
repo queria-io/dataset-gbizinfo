@@ -3,7 +3,7 @@ name = "dataset-gbizinfo"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
-    "queria>=0.13.0",
+    "queria>=0.25.3",
     "dbt-core>=1.11.2",
     "dbt-duckdb>=1.10.0",
     "httpx>=0.27",
