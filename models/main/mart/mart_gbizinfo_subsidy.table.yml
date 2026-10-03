@@ -9,6 +9,7 @@ fields:
   - name: corporate_number
     title: 法人番号
     description: 13桁。国税庁法人番号(houjin_bangou)と結合できる
+    semantic: { role: entity, name: corporate_number }
   - name: name
     title: 商号または名称
   - name: title
