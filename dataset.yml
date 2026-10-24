@@ -17,6 +17,7 @@ keywords:
   - 経済産業省
 homepage: https://github.com/queria-io/dataset-gbizinfo
 language: ja
+themes: [economy]
 
 licenses:
   - JP-GOV-STD-2.0
