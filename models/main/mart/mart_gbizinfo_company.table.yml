@@ -1,8 +1,10 @@
 schema: main
 name: mart_gbizinfo_company
 title: 法人活動サマリ
-description: gBizINFO の法人活動情報を法人 1 行に集約。基本属性(資本金・従業員数・設立年・業種)に補助金・調達の集計と最新財務・職場指標を加えたもの。corporate_number
-  で国税庁法人番号(houjin_bangou)・全国地方公共団体コード(lg-code)と結合できる
+description: |-
+  gBizINFO の法人活動情報を 1 法人 1 行にまとめたものです。資本金・従業員数・設立年・業種に、補助金と調達の集計、最新の財務、職場の指標を加えています。
+
+  - 法人番号（corporate_number）で houjin_bangou と結合できます。所在地は houjin_bangou にあります
 published: true
 sources:
   - path: https://info.gbiz.go.jp/

@@ -1,59 +1,53 @@
-# dataset-gbizinfo
+# gBizINFO
 
-経済産業省 gBizINFO の法人活動情報を取得し、DuckLake (SQLite カタログ + R2) として Queria に公開するデータセット。
-法人番号 (corporate_number) をキーに国税庁法人番号 (dataset-houjin-bangou) や
-全国地方公共団体コード (dataset-lg-code) と結合できる。
+経済産業省 [gBizINFO](https://info.gbiz.go.jp/) の法人活動情報を、SQL で検索・集計できるテーブルにしたデータセットです。法人番号ごとの基本情報（資本金・従業員数・設立年・業種）と、補助金・調達・財務・職場情報・表彰・届出と認定・特許の実績を収録しています。法人番号（`corporate_number`）で houjin_bangou・edinet・p_portal と結合できます。
 
-## 収録データ
+## 出典と利用条件
 
-gBizINFO の「データダウンロード」から取得した 8 種別の全件データ:
+- gBizINFO の「データダウンロード」の全件データ（8 種類）を加工して作成しています
+- 出典：gBizINFO（経済産業省）。gBizINFO 利用規約に基づき出典を明記して再配布しています
+- 最新性・正確性・完全性等が保証されたものではありません
 
-- 基本情報 (資本金・従業員数・設立年・事業概要・業種)
-- 補助金交付実績
-- 国の調達 (受注) 実績
-- 財務情報
-- 職場情報 (女性活躍・両立支援の指標)
-- 表彰実績
-- 届出・認定実績
-- 特許・意匠・商標 (登録実績)
+## テーブル
 
-公開 mart:
+| テーブル | 内容 |
+| --- | --- |
+| `main.mart_gbizinfo_company` | 1 法人 1 行の活動のまとめ（基本情報、補助金と調達の集計、最新の財務、職場の指標） |
+| `main.mart_gbizinfo_finance` | 財務指標の推移（法人 × 回次、1 法人あたり直近 5 期まで） |
+| `main.mart_gbizinfo_workplace` | 職場情報（1 法人 1 行、女性活躍と両立支援の公表項目） |
+| `main.mart_gbizinfo_subsidy` | 補助金の交付実績（1 件 1 行） |
+| `main.mart_gbizinfo_procurement` | 国の調達（受注）の実績（1 件 1 行） |
+| `main.mart_gbizinfo_commendation` | 表彰の実績（1 件 1 行） |
+| `main.mart_gbizinfo_certification` | 届出・認定の実績（1 件 1 行） |
+| `main.mart_gbizinfo_patent` | 特許・意匠・商標の登録実績（1 件 1 行） |
 
-- `mart_gbizinfo_company` — 法人 1 行の活動サマリ (基本属性 + 補助金/調達集計 + 最新財務 + 職場指標)
-- `mart_gbizinfo_finance` — 財務指標の推移 (法人 × 回次 1 行・1 法人あたり直近 5 期まで)
-- `mart_gbizinfo_workplace` — 職場情報 (法人 1 行・女性活躍と両立支援の公表項目を全項目)
-- `mart_gbizinfo_subsidy` — 補助金交付実績 (1 件 1 行)
-- `mart_gbizinfo_procurement` — 調達 (受注) 実績 (1 件 1 行)
-- `mart_gbizinfo_commendation` — 表彰実績 (1 件 1 行)
-- `mart_gbizinfo_certification` — 届出・認定実績 (1 件 1 行)
-- `mart_gbizinfo_patent` — 特許・意匠・商標の登録実績 (1 件 1 行)
+法人の名称と所在地は houjin_bangou にあります。所在地で絞るときは `corporate_number` で houjin_bangou と結合してください。
 
-### 財務情報の期の扱い
+## 使い方
 
-財務情報は 1 法人あたり直近 5 期分を回次 (`period_number`) 0〜4 で持つ (0 が最新)。
-ただし gBizINFO が返す事業年度の表記は最新期のぶんしか無く、どの回次の行にも同じ文字列
-(例「第20期（自 2025年４月１日 至 2026年３月31日）」) が入る。
+日野市に本店がある法人を、補助金の交付額の多い順に並べる:
 
-そのため `stg_gbizinfo_finance` でこの表記から最新期の期末日 `latest_period_end` を取り出し
-(和暦表記も西暦へ変換する)、そこから回次の分だけ年をさかのぼった `period_end_estimated` を
-付けている。後者は推定値で、決算期を変更した法人ではずれる。回次の無い期の行は作らない。
+```sql
+SELECT h.name, c.subsidy_count, c.subsidy_total_amount
+FROM gbizinfo.main.mart_gbizinfo_company AS c
+JOIN houjin_bangou.main.mart_houjin_bangou AS h USING (corporate_number)
+WHERE h.lg_code = '132128' AND c.subsidy_count > 0
+ORDER BY c.subsidy_total_amount DESC;
+```
 
-表記のゆれは「至 ...」と「...から ...まで」の 2 通りと、和暦の「元年」がある。いずれも
-解釈しており、収録 24,294 行すべてで期末日が取れている (2026-08 時点)。
+## 財務情報の期の扱い
 
-収益の欄も業種で分かれる。売上高 (`net_sales`) が空の 4,454 行のうち 3,843 行は
-営業収益・営業収入・営業総収入・経常収益・正味収入保険料のいずれかで報告しているため、
-これら 5 列も併せて出す (2026-08 時点)。売上高だけを集計すると銀行・保険・鉄道・不動産
-などが落ちる。`operating_receipts` は「営業収入」で、利益ではなく収入の側。
+財務情報は 1 法人あたり直近 5 期分を回次（`period_number`）0〜4 で持ちます（0 が最新）。ただし gBizINFO が返す事業年度の表記は最新期の分しか無く、どの回次の行にも同じ文字列（例「第20期（自 2025年４月１日 至 2026年３月31日）」）が入ります。
 
-### 職場情報の埋まり方
+そのため、この表記から最新期の期末日 `latest_period_end` を取り出し（和暦も西暦に変換します）、そこから回次の分だけ年をさかのぼった `period_end_estimated` を付けています。後者は推定値で、決算期を変更した法人ではずれます。収録している 24,294 行すべてで期末日を取り出せています（2026-08 時点）。
 
-職場情報は女性活躍推進法・次世代育成支援対策推進法にもとづく公表項目で、届け出るかどうかも
-どの項目を埋めるかも法人にゆだねられている。gBizINFO は 1 項目も届け出ていない法人も名称だけの
-行として返すため、`mart_gbizinfo_workplace` は実測値を 1 つ以上報告している法人に絞る
-(149,483 法人のうち 33,049 法人・2026-08 時点)。
+収益の列は業種で分かれます。売上高（`net_sales`）が空の 4,454 行のうち 3,843 行は、営業収益・営業収入・営業総収入・経常収益・正味収入保険料のいずれかで報告しているので、これら 5 列も持っています（2026-08 時点）。売上高だけを集計すると、銀行・保険・鉄道・不動産などが抜けます。`operating_receipts` は「営業収入」で、利益ではなく収入です。
 
-絞ったあとも項目ごとに埋まり方が大きく違う (収録 33,049 法人に対する割合・2026-08 時点)。
+## 職場情報の埋まり方
+
+職場情報は女性活躍推進法・次世代育成支援対策推進法に基づく公表項目で、届け出るかどうかも、どの項目を埋めるかも法人が決めます。gBizINFO は 1 項目も届け出ていない法人も名称だけの行として返すため、`mart_gbizinfo_workplace` は値を 1 つ以上報告している法人に絞っています（149,483 法人のうち 33,049 法人、2026-08 時点）。
+
+絞ったあとも、項目ごとに報告している法人の数が大きく違います（収録 33,049 法人に対する割合、2026-08 時点）。
 
 | 項目 | 報告法人 | 割合 |
 | --- | ---: | ---: |
@@ -65,56 +59,12 @@ gBizINFO の「データダウンロード」から取得した 8 種別の全�
 | 月平均所定外労働時間 | 2,700 | 8.2% |
 | 育児休業対象者数 (男性) | 2,520 | 7.6% |
 
-項目を組み合わせて集計すると母数がさらに小さくなるので、割合を出すときは母数をその項目を
-報告した法人に取る。
+項目を組み合わせて集計すると母数がさらに小さくなります。割合を出すときは、その項目を報告した法人を母数にしてください。
 
-継続勤務年数と女性労働者比率には対象区分の列 (`avg_service_years_scope` /
-`female_ratio_scope`) が付く。これは数値の範囲ではなく、その数字が対象とする労働者の区分で、
-法人によって違う。法人間で比べるときはこの列で揃える。取りうる値は列で違い、
-`avg_service_years_scope` は 正社員 / その他 / 対象とする労働者すべて / 基幹的な職種、
-`female_ratio_scope` は 正社員 / その他 / 基幹的な職種 の 3 つ。
+- 継続勤務年数と女性労働者比率には、対象の労働者区分の列（`avg_service_years_scope`・`female_ratio_scope`）があります。数値の範囲ではなく、その数字が対象とする労働者の区分で、法人によって違います。法人間で比べるときはこの列で統一してください。`avg_service_years_scope` は 正社員／その他／対象とする労働者すべて／基幹的な職種、`female_ratio_scope` は 正社員／その他／基幹的な職種 のいずれかです
+- 区分だけ選んで数値を報告していない法人（935 法人）は収録していません。収録した法人でも、`avg_service_years_scope` があって年数が空の行はあります
+- 比率の列（`female_manager_ratio`・`female_officer_ratio`・`childcare_leave_ratio_male`・`childcare_leave_ratio_female`）は人数から算出したもので、分母が 0 の行は空です。育児休業取得率は対象者と取得者を数える年度がずれる法人があり、100% を超える行が男性 12 件・女性 47 件あります（2026-08 時点）
 
-区分だけ選んで数値を報告しない法人があるため、区分列は絞り込みの判定に入れていない
-(区分だけの 935 法人は収録しない)。収録した法人でも `avg_service_years_scope` が
-埋まっていて年数が空の行はある。
+## 更新
 
-比率の列 (`female_manager_ratio` / `female_officer_ratio` /
-`childcare_leave_ratio_male` / `childcare_leave_ratio_female`) は人数から算出したもので、
-分母が 0 の行では空になる。育児休業取得率は対象者と取得者を数える年度がずれる法人があり、
-100% を超える行が男性 12 件・女性 47 件ある (2026-08 時点)。
-
-## 取得方式
-
-gBizINFO のデータダウンロード (DownloadTop) から全件 CSV を取得する。各ファイルは
-日次更新されるため、更新頻度に応じて 2 モードに分けて鮮度を上げている。
-
-- full (月次): 基本情報・特許を含む全 8 種別を取得して全モデルを再ビルドする
-  (基本情報 Kihonjoho 約 1.7GB・特許 Tokkyojoho 約 1.2GB は重いが変化が緩やかなため月次)。
-  ワークフロー: `.github/workflows/sync.yml`
-- activity (日次): 活動 6 種別 (補助金・調達・財務・職場・表彰・届出認定) のみ取得し、
-  `dbt build --exclude raw_gbizinfo_basic raw_gbizinfo_patent` で基本情報・特許層を
-  据え置いたまま活動データと mart を再ビルドする。
-  ワークフロー: `.github/workflows/sync-activity.yml`
-
-モードは環境変数 `GBIZINFO_SYNC_MODE` (`full` 既定 / `activity`) で切り替える。
-activity モードでも基本情報・特許テーブルが揃っていなければ full にフォールバックする。
-
-法人の名称・住所は国税庁法人番号 (dataset-houjin-bangou) と重複するため、本データセットは
-corporate_number で結合できる形を保ち、物理的な結合はしない (利用側で結合する)。
-
-## セットアップと実行
-
-```bash
-uv sync
-echo "QUERIA_TOKEN=<Queria の API トークン>" > .env
-echo "GBIZINFO_API_TOKEN=<gBizINFO アクセストークン>" >> .env
-
-scripts/build.sh                    # ビルドして Queria に公開する
-```
-
-`GBIZINFO_API_TOKEN` は gBizINFO の API 利用申請で発行されるアクセストークン
-(REST API と データダウンロードで共通)。
-
-## ライセンス
-
-出典：gBizINFO（経済産業省）。gBizINFO 利用規約に基づき出典を明記して再配布する。
+基本情報と特許は月 1 回、それ以外の活動のデータは毎日取り込みます。

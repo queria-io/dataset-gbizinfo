@@ -1,7 +1,10 @@
 schema: main
 name: mart_gbizinfo_patent
 title: 特許・意匠・商標
-description: gBizINFO の特許・意匠・商標の登録実績(1 件 1 行)。corporate_number で国税庁法人番号(houjin_bangou)と結合できる
+description: |-
+  gBizINFO の特許・意匠・商標の登録実績です。1 行が 1 件の登録です。
+
+  - 法人番号（corporate_number）で houjin_bangou と結合できます
 published: true
 sources:
   - path: https://info.gbiz.go.jp/
