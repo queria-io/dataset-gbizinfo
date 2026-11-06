@@ -1,10 +1,11 @@
 schema: main
 name: mart_gbizinfo_workplace
 title: 職場情報
-description: gBizINFO の職場情報(法人 1 行)。女性活躍推進法・次世代育成支援対策推進法にもとづいて法人が公表した平均年齢・平均継続勤務年数・月平均所定外労働時間・女性労働者比率・女性管理職比率・育児休業取得者数を収録する。mart_gbizinfo_company
-  が持つのはこのうち 3 項目だけで、こちらは全項目を出す。gBizINFO は 1 項目も届け出ていない法人も名称だけの行として返すため、実測値を 1 つ以上報告している法人に絞ってある(職場情報の全 149,483 法人のうち 33,049
-  法人、2026-08 時点)。収録した法人の中でも項目ごとに埋まり方が大きく違い、女性労働者比率は 65%・女性管理職人数は 43% だが、平均年齢・月平均所定外労働時間・育児休業は 8% 前後しか埋まらない。項目を組み合わせて集計するときは、母数をその項目を報告した法人に取ること。corporate_number
-  で国税庁法人番号(houjin_bangou)・gBizINFO の他テーブルと結合できる
+description: |-
+  gBizINFO の職場情報です。1 行が 1 法人で、女性活躍推進法・次世代育成支援対策推進法に基づいて法人が公表した平均年齢・平均継続勤務年数・所定外労働時間・女性労働者比率・女性管理職比率・育児休業取得者数を持ちます。
+
+  - 値を 1 つ以上報告している法人だけです
+  - 項目ごとに報告している法人の数が大きく違います。割合を出すときは、その項目を報告した法人を母数にしてください
 published: true
 keywords:
   - 職場環境
@@ -30,7 +31,7 @@ fields:
     description: 時間。報告した法人は 2,700 法人(2026-08 時点)
   - name: avg_service_years_scope
     title: 平均継続勤務年数の対象区分
-    description: 継続勤務年数が対象とする労働者の区分。数値の範囲ではない。正社員 / その他 / 対象とする労働者すべて / 基幹的な職種 のいずれか。法人によって区分が違うので、年数を法人間で比べるときはこの列で揃える。区分だけ選んで年数を報告していない法人があり、この列が埋まっていても年数が空の行がある
+    description: 継続勤務年数の対象の労働者区分（正社員・その他など）。法人間で比べるときはこの列で統一
   - name: avg_service_years_male
     title: 平均継続勤務年数（男性）
     description: 年
@@ -42,7 +43,7 @@ fields:
     description: 年。男女別の欄とは別に報告する項目で、報告した法人は 2,694 法人(2026-08 時点)
   - name: female_ratio_scope
     title: 女性労働者比率の対象区分
-    description: 女性労働者の割合が対象とする労働者の区分。数値の範囲ではない。正社員 / その他 / 基幹的な職種 のいずれか。avg_service_years_scope と違い「対象とする労働者すべて」は現れない
+    description: 女性労働者の割合の対象の労働者区分（正社員・その他・基幹的な職種）
   - name: female_ratio
     title: 労働者に占める女性労働者の割合
     description: ％
@@ -52,25 +53,25 @@ fields:
     title: 管理職全体人数（男女計）
   - name: female_manager_ratio
     title: 女性管理職比率
-    description: ％。female_managers / total_managers から算出。管理職が 0 人と報告した法人では空
+    description: 女性管理職比率（%）。管理職が 0 人の法人は空
   - name: female_officers
     title: 女性役員人数
   - name: total_officers
     title: 役員全体人数（男女計）
   - name: female_officer_ratio
     title: 女性役員比率
-    description: ％。female_officers / total_officers から算出。役員が 0 人と報告した法人では空
+    description: 女性役員比率（%）。役員が 0 人の法人は空
   - name: childcare_leave_eligible_male
     title: 育児休業対象者数（男性）
   - name: childcare_leave_taken_male
     title: 育児休業取得者数（男性）
   - name: childcare_leave_ratio_male
     title: 育児休業取得率（男性）
-    description: ％。取得者数 / 対象者数から算出。対象者が 0 人と報告した法人では空。対象者と取得者を数える年度がずれる法人があり 100％ を超える行がある
+    description: 男性の育児休業取得率（%）。100% を超える行がある
   - name: childcare_leave_eligible_female
     title: 育児休業対象者数（女性）
   - name: childcare_leave_taken_female
     title: 育児休業取得者数（女性）
   - name: childcare_leave_ratio_female
     title: 育児休業取得率（女性）
-    description: ％。取得者数 / 対象者数から算出。対象者が 0 人と報告した法人では空。対象者と取得者を数える年度がずれる法人があり 100％ を超える行がある
+    description: 女性の育児休業取得率（%）。100% を超える行がある
