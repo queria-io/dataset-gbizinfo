@@ -19,12 +19,15 @@ activity モードでも基本情報・特許テーブルが揃っていなけ�
 ## セットアップと実行
 
 ```bash
+git submodule update --init
 uv sync
-echo "QUERIA_TOKEN=<Queria の API トークン>" > .env
+echo "FDL_TOKEN=<Queria の API トークン>" > .env
 echo "GBIZINFO_API_TOKEN=<gBizINFO アクセストークン>" >> .env
 
 scripts/build.sh                    # ビルドして Queria に公開する
 ```
+
+`scripts/build.sh` は公開中のバージョンを `fdl checkout` してから取り込み・ビルドし、`fdl commit` と `fdl push` で公開する（`shared/scripts/build-fdl.sh`）。GitHub Actions では Queria のトークンを OIDC で取得する。
 
 `GBIZINFO_API_TOKEN` は gBizINFO の API 利用申請で発行されるアクセストークン
 (REST API と データダウンロードで共通)。

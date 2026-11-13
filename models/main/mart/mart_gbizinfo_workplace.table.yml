@@ -6,7 +6,6 @@ description: |-
 
   - 値を 1 つ以上報告している法人だけです
   - 項目ごとに報告している法人の数が大きく違います。割合を出すときは、その項目を報告した法人を母数にしてください
-published: true
 keywords:
   - 職場環境
   - 女性活躍
@@ -20,7 +19,7 @@ fields:
   - name: corporate_number
     title: 法人番号
     description: 13桁。国税庁法人番号(houjin_bangou)と結合できる
-    semantic: { role: entity, name: corporate_number }
+    annotations: { queria: { semantic: { role: entity, name: corporate_number } } }
   - name: name
     title: 商号または名称
   - name: avg_age

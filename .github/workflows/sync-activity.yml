@@ -17,29 +17,20 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    # Checkpoint も同じカタログに push する。並行して走ると、後から push した側が
-    # 先の push の最中にカタログを変えてしまい、先の側が "The dataset changed while
-    # this push was running" で落ちる。Checkpoint は dataset-shared の reusable を
-    # 経由し、そちらの job が同じ group に入っているので、ここでも同じ group を書く。
-    # 上の workflow レベルの concurrency は Sync 同士しか直列化しない。
-    #
-    # 走っている側は止めない。push の途中で切ると、公開されたカタログと
-    # データファイルの対応が途中の状態で残る
+    # Queria への書き込みは GitHub Actions の OIDC で 1 時間のトークンを取って行う
+    # (shared/scripts/build-fdl.sh)。Queria にこのワークフローの登録が要る
+    permissions:
+      contents: read
+      id-token: write
+    # 共通の Sync の job と同じ group。走っている側は止めない。push の途中で切ると、
+    # 公開されたバージョンとデータファイルの対応が途中の状態で残る
     concurrency:
       group: queria-catalog-write
       cancel-in-progress: false
-      # 既定の queue: single は pending を 1 つしか持てず、後から来た run が
-      # 待っている run を蹴る。月 1 回の Checkpoint が日次の列に埋もれないよう、
-      # 待てる数を増やす
       queue: max
     env:
       PYTHONUNBUFFERED: "1"
       GBIZINFO_SYNC_MODE: activity
-      # queria は誰のデータセットに書くのかをトークンから決める。R2 の鍵は渡さない
-      QUERIA_TOKEN: ${{ secrets.QUERIA_TOKEN }}
-      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-      CF_D1_DATABASE_ID: ${{ secrets.CF_D1_DATABASE_ID }}
       GBIZINFO_API_TOKEN: ${{ secrets.GBIZINFO_API_TOKEN }}
     steps:
       - uses: actions/checkout@v5
@@ -51,8 +42,8 @@ jobs:
           enable-cache: true
       - run: uv python install 3.13
 
-      # queria はベータ開発中のため、常に最新版を使用する
-      - run: uv lock --upgrade-package queria && uv sync
+      # fdl はベータ開発中のため、常に最新版を使用する
+      - run: uv lock --upgrade-package fdl-cli && uv sync
 
       - name: Build and push
         run: scripts/build.sh

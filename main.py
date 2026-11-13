@@ -2,8 +2,8 @@
 
 経済産業省 gBizINFO のデータダウンロード機能から情報種別ごとの全件 CSV を取得し、
 そのパスを dbt の var として渡して raw→stg→mart を構築する。
-queria の DuckLake カタログ (QUERIA_* 環境変数で注入) へ書き込み、
-R2 への公開は queria sync の push が担う。
+fdl checkout の作業場の DuckLake カタログ (FDL_WORKING) へ書き込み、
+公開は fdl commit / fdl push が担う (scripts/build.sh)。
 
 gBizINFO の各ファイル (基本情報・特許を除く) は日次更新される。鮮度を上げるため、
 更新の頻度に応じて取得対象を 2 モードに分ける:
@@ -18,8 +18,8 @@ gBizINFO の各ファイル (基本情報・特許を除く) は日次更新さ�
     `dbt build --exclude raw_gbizinfo_basic raw_gbizinfo_patent` で
     基本情報・特許層を据え置いたまま活動データと mart を再ビルドする。
     据え置く層は前回の full ビルドのテーブルをそのまま使う。
-    既存カタログの raw_gbizinfo_basic / raw_gbizinfo_patent を参照するため、CI では
-    queria sync が pull で公開済みカタログを取り込んでから実行する。
+    既存カタログの raw_gbizinfo_basic / raw_gbizinfo_patent を参照するため、
+    公開中のバージョンを fdl checkout してから実行する (build-fdl.sh が行う)。
 """
 
 from __future__ import annotations
@@ -112,14 +112,18 @@ def _download_csv(client: httpx.Client, spec: TypeSpec, token: str, dest_dir: Pa
 
 @contextmanager
 def _ducklake_connect() -> Generator[duckdb.DuckDBPyConnection]:
-    """Open a fresh DuckDB session with the queria-managed DuckLake attached."""
-    catalog_path = os.environ["QUERIA_CATALOG_PATH"]
-    data_url = os.environ["QUERIA_DATA_URL"]
-    # ビルドが公開ストレージを読むときの名乗り。queria run が queria-build として
+    """fdl checkout の作業場の DuckLake をアタッチした新規 DuckDB セッションを開く。
+
+    shared/scripts/build-fdl.sh が渡す環境変数 (作業場のカタログ ``FDL_WORKING`` と
+    新しいデータファイルの置き場 ``FDL_DATA_PATH``) を使う。置き場が公開ストレージの
+    ``data/`` のときは、build-fdl.sh が鍵を取り直す DuckDB の永続 secret を作っているので、
+    この接続でも期限が切れるたびに取り直される。
+    """
+    catalog_path = os.environ["FDL_WORKING"]
+    data_url = os.environ["FDL_DATA_PATH"]
+    # ビルドが公開ストレージを読むときの名乗り。build-fdl.sh が queria-build として
     # 渡す。profiles.yml の config_options と同じ値を、こちらのセッションにも通す。
-    # 取り込みの一部は dbt ではなくこの接続で行うので、ここが抜けるとその読み取りが
-    # 匿名のまま出ていき、data.queria.io の利用統計に自分のビルドが利用者として
-    # 混ざる。接続を開くときにしか決められないので config= で渡す
+    # 接続を開くときにしか決められないので config= で渡す
     conn = duckdb.connect(
         ":memory:",
         config={"custom_user_agent": os.environ.get("QUERIA_USER_AGENT", "")},
@@ -127,25 +131,9 @@ def _ducklake_connect() -> Generator[duckdb.DuckDBPyConnection]:
     try:
         conn.execute("INSTALL ducklake; LOAD ducklake;")
         conn.execute("INSTALL sqlite; LOAD sqlite;")
-        if data_url.startswith("s3://"):
-            conn.execute("INSTALL httpfs; LOAD httpfs;")
-            # credential_chain はこの拡張にある
-            conn.execute("INSTALL aws; LOAD aws;")
-            # 認証情報を値として持たず、期限が切れたら取り直させる。一時認証情報は
-            # 15 分で切れるのに対しこのビルドはそれより長く走るので、値を渡す形だと
-            # 途中で書けなくなる。process が実行するのは queria で、鍵はどこにも置かない
-            use_ssl = (
-                "false" if os.environ.get("QUERIA_S3_USE_SSL") == "false" else "true"
-            )
-            conn.execute(
-                "CREATE SECRET (TYPE s3, PROVIDER credential_chain, "
-                "CHAIN 'process', REFRESH auto, ENDPOINT ?, URL_STYLE 'path', "
-                f"REGION ?, USE_SSL {use_ssl})",
-                [
-                    os.environ["QUERIA_S3_ENDPOINT_HOST"],
-                    os.environ.get("QUERIA_S3_REGION", "auto"),
-                ],
-            )
+        conn.execute("INSTALL httpfs; LOAD httpfs;")
+        # 永続 secret の credential_chain はこの拡張にある
+        conn.execute("INSTALL aws; LOAD aws;")
         conn.execute(
             f"ATTACH 'ducklake:{catalog_path}' AS gbizinfo "
             f"(DATA_PATH '{data_url}', OVERRIDE_DATA_PATH true, "
