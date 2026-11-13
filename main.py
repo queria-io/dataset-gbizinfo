@@ -13,7 +13,7 @@ gBizINFO の各ファイル (基本情報・特許を除く) は日次更新さ�
     基本情報 (Kihonjoho 約 1.7GB)・特許 (Tokkyojoho 約 1.2GB) は重いが
     変化が緩やかなため月次で十分。
 
-  activity (日次): 環境変数 GBIZINFO_SYNC_MODE=activity で指定。
+  activity (日次): 環境変数 SYNC_MODE=activity で指定。
     補助金・調達・財務・職場・表彰・届出認定の活動 6 種別のみ取得し、
     `dbt build --exclude raw_gbizinfo_basic raw_gbizinfo_patent` で
     基本情報・特許層を据え置いたまま活動データと mart を再ビルドする。
@@ -166,7 +166,7 @@ def _full_only_raw_exists() -> bool:
 
 def main() -> None:
     target = os.environ.get("DBT_TARGET", sys.argv[1] if len(sys.argv) > 1 else "default")
-    mode = os.environ.get("GBIZINFO_SYNC_MODE", "full").lower()
+    mode = (os.environ.get("SYNC_MODE") or "full").lower()
     token = os.environ["GBIZINFO_API_TOKEN"]
 
     if mode == "activity" and not _full_only_raw_exists():
