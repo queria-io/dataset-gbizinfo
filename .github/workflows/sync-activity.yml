@@ -3,7 +3,6 @@ name: Sync (activity)
 # 活動データ (補助金・調達・財務・職場、計約220MB) を日次で取得して再ビルドする。
 # gBizINFO のファイルは日次更新されるため鮮度を上げる目的。基本情報 (1.7GB) は
 # 据え置き、月次の Sync (full) で更新する。
-# トークンはこのリポジトリ専用の Repository secret GBIZINFO_API_TOKEN を使う。
 
 on:
   schedule:
@@ -16,45 +15,13 @@ concurrency:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
     # Queria への書き込みは GitHub Actions の OIDC で 1 時間のトークンを取って行う
-    # (shared/scripts/build-fdl.sh)。Queria にこのワークフローの登録が要る
     permissions:
       contents: read
       id-token: write
-    # 共通の Sync の job と同じ group。走っている側は止めない。push の途中で切ると、
-    # 公開されたバージョンとデータファイルの対応が途中の状態で残る
-    concurrency:
-      group: queria-catalog-write
-      cancel-in-progress: false
-      queue: max
-    env:
-      PYTHONUNBUFFERED: "1"
-      GBIZINFO_SYNC_MODE: activity
+    uses: queria-io/dataset-shared/.github/workflows/sync.yml@dc0e5caa95da02a5303726dca8df5dec26c94322
+    with:
+      mode: activity
+    secrets:
       GBIZINFO_API_TOKEN: ${{ secrets.GBIZINFO_API_TOKEN }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: true
-
-      - uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-      - run: uv python install 3.13
-
-      # fdl はベータ開発中のため、常に最新版を使用する
-      - run: uv lock --upgrade-package fdl-cli && uv sync
-
-      - name: Build and push
-        run: scripts/build.sh
-
-  notify-failure:
-    runs-on: ubuntu-latest
-    needs: sync
-    if: failure()
-    steps:
-      - name: Notify Discord on failure
-        run: |
-          curl -s -H "Content-Type: application/json" \
-            -d "{\"embeds\": [{\"title\": \"Sync (activity) Failed\", \"url\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\", \"color\": 15158332, \"fields\": [{\"name\": \"Repository\", \"value\": \"${{ github.repository }}\"}, {\"name\": \"Branch\", \"value\": \"${{ github.ref_name }}\"}, {\"name\": \"Commit\", \"value\": \"${{ github.sha }}\"}]}]}" \
-            "${{ secrets.DISCORD_WEBHOOK_URL }}"
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

@@ -1,11 +1,7 @@
 name: Sync
 
-# 月次の full ビルド (基本情報を含む全 5 種別)。GBIZINFO_SYNC_MODE は未設定で
-# main.py の既定 full。日次の活動データ更新は sync-activity.yml が担う。
-#
-# gBizINFO のアクセストークンはこのリポジトリ専用の Repository secret
-# GBIZINFO_API_TOKEN を使う。共有ワークフロー (dataset-shared) には渡さず、
-# ここで自己完結してビルドする。
+# 月次の full ビルド (基本情報・特許を含む全種別)。mode は渡さず、main.py の既定の full。
+# 日次の活動データ更新は sync-activity.yml が担う。
 
 on:
   push:
@@ -22,44 +18,13 @@ concurrency:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
     # Queria への書き込みは GitHub Actions の OIDC で 1 時間のトークンを取って行う
-    # (shared/scripts/build-fdl.sh)。Queria にこのワークフローの登録が要る
     permissions:
       contents: read
       id-token: write
-    # 共通の Sync の job と同じ group。走っている側は止めない。push の途中で切ると、
-    # 公開されたバージョンとデータファイルの対応が途中の状態で残る
-    concurrency:
-      group: queria-catalog-write
-      cancel-in-progress: false
-      queue: max
-    env:
-      PYTHONUNBUFFERED: "1"
+    uses: queria-io/dataset-shared/.github/workflows/sync.yml@dc0e5caa95da02a5303726dca8df5dec26c94322
+    with:
+      dataset_name: gbizinfo
+    secrets:
       GBIZINFO_API_TOKEN: ${{ secrets.GBIZINFO_API_TOKEN }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: true
-
-      - uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-      - run: uv python install 3.13
-
-      # fdl はベータ開発中のため、常に最新版を使用する
-      - run: uv lock --upgrade-package fdl-cli && uv sync
-
-      - name: Build and push
-        run: scripts/build.sh
-
-  notify-failure:
-    runs-on: ubuntu-latest
-    needs: sync
-    if: failure()
-    steps:
-      - name: Notify Discord on failure
-        run: |
-          curl -s -H "Content-Type: application/json" \
-            -d "{\"embeds\": [{\"title\": \"Sync Failed\", \"url\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\", \"color\": 15158332, \"fields\": [{\"name\": \"Repository\", \"value\": \"${{ github.repository }}\"}, {\"name\": \"Branch\", \"value\": \"${{ github.ref_name }}\"}, {\"name\": \"Commit\", \"value\": \"${{ github.sha }}\"}]}]}" \
-            "${{ secrets.DISCORD_WEBHOOK_URL }}"
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

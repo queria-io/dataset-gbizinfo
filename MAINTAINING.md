@@ -13,7 +13,7 @@ gBizINFO のデータダウンロード (DownloadTop) から全件 CSV を取得
   据え置いたまま活動データと mart を再ビルドする。
   ワークフロー: `.github/workflows/sync-activity.yml`
 
-モードは環境変数 `GBIZINFO_SYNC_MODE` (`full` 既定 / `activity`) で切り替える。
+モードは環境変数 `SYNC_MODE` (`full` 既定 / `activity`) で切り替える。
 activity モードでも基本情報・特許テーブルが揃っていなければ full にフォールバックする。
 
 ## セットアップと実行
