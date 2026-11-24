@@ -1,0 +1,50 @@
+$schema: https://tabledoc.queria.io/schemas/dataset/v1.json
+name: gbizinfo
+title: gBizINFO 法人活動情報
+description: |-
+  経済産業省 gBizINFO の法人活動情報です。法人番号ごとの基本情報（資本金・従業員数・設立年・業種）と、補助金・調達・財務・職場情報・表彰・届出と認定・特許の実績を収録しています。
+
+  出典：gBizINFO（経済産業省）。gBizINFO 利用規約に基づき出典を明記して再配布しています。最新性・正確性・完全性等が保証されたものではありません。
+image: cover.png
+topics:
+  - 法人
+  - 企業活動
+  - 補助金
+  - 調達
+  - 財務
+  - 表彰
+  - 届出認定
+  - 特許
+  - 職場環境
+  - 女性活躍
+  - 経済産業省
+synonyms:
+  - gBizINFO
+  - Gビズインフォ
+  - 法人活動情報
+  - 補助金
+  - 調達実績
+  - 職場情報
+  - 女性活躍
+language: ja
+licenses:
+  - JP-GOV-STD-2.0
+sources:
+  - id: info
+    title: gBizINFO（経済産業省）
+    url: https://info.gbiz.go.jp/
+contributors:
+  - id: meti
+    title: 経済産業省
+    url: https://www.meti.go.jp/
+    roles:
+      - rightsHolder
+temporal_coverage:
+  start: '2013-05-17'
+  end:
+spatial_coverage:
+  - JP
+update_frequency: monthly
+schemas:
+  - name: main
+    title: 法人活動情報

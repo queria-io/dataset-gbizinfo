@@ -1,17 +1,16 @@
-schema: main
-name: mart_gbizinfo_patent
+$schema: https://tabledoc.queria.io/schemas/table/v1.json
 title: 特許・意匠・商標
 description: |-
   gBizINFO の特許・意匠・商標の登録実績です。1 行が 1 件の登録です。
 
   - 法人番号（corporate_number）で houjin_bangou と結合できます
 sources:
-  - path: https://info.gbiz.go.jp/
-fields:
+  - info
+columns:
   - name: corporate_number
     title: 法人番号
     description: 13桁。国税庁法人番号(houjin_bangou)と結合できる
-    annotations: { queria: { semantic: { role: entity, name: corporate_number } } }
+    entity: corporate_number
   - name: name
     title: 商号または名称
   - name: rights_type

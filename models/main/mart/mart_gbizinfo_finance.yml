@@ -2,7 +2,6 @@ version: 2
 
 models:
   - name: mart_gbizinfo_finance
-    description: gBizINFO の財務指標の推移(法人 × 回次 1 行)。corporate_number で国税庁法人番号(houjin_bangou)と結合できる
     columns:
       - name: corporate_number
       - name: name

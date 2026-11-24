@@ -1,12 +1,11 @@
-schema: main
-name: mart_gbizinfo_workplace
+$schema: https://tabledoc.queria.io/schemas/table/v1.json
 title: 職場情報
 description: |-
   gBizINFO の職場情報です。1 行が 1 法人で、女性活躍推進法・次世代育成支援対策推進法に基づいて法人が公表した平均年齢・平均継続勤務年数・所定外労働時間・女性労働者比率・女性管理職比率・育児休業取得者数を持ちます。
 
   - 値を 1 つ以上報告している法人だけです
   - 項目ごとに報告している法人の数が大きく違います。割合を出すときは、その項目を報告した法人を母数にしてください
-keywords:
+topics:
   - 職場環境
   - 女性活躍
   - 育児休業
@@ -14,12 +13,12 @@ keywords:
   - 平均年齢
   - 法人
 sources:
-  - path: https://info.gbiz.go.jp/
-fields:
+  - info
+columns:
   - name: corporate_number
     title: 法人番号
     description: 13桁。国税庁法人番号(houjin_bangou)と結合できる
-    annotations: { queria: { semantic: { role: entity, name: corporate_number } } }
+    entity: corporate_number
   - name: name
     title: 商号または名称
   - name: avg_age

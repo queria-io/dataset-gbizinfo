@@ -1,5 +1,4 @@
-schema: main
-name: mart_gbizinfo_finance
+$schema: https://tabledoc.queria.io/schemas/table/v1.json
 title: 財務指標の推移
 description: |-
   gBizINFO の財務指標の推移です。1 行が 1 法人 × 回次で、直近 5 期までの売上高・経常利益・当期純利益・総資産・純資産を持ちます。
@@ -7,7 +6,7 @@ description: |-
   - 有価証券報告書などを提出する企業に限られ、非上場の中小企業はほとんど含みません
   - 期末日は最新期だけが実値で、それ以前は推定値（period_end_estimated）です
   - 銀行・保険・鉄道などは売上高が空で、営業収益などの列で収益を報告しています
-keywords:
+topics:
   - 財務
   - 売上高
   - 経常利益
@@ -15,12 +14,12 @@ keywords:
   - 時系列
   - 法人
 sources:
-  - path: https://info.gbiz.go.jp/
-fields:
+  - info
+columns:
   - name: corporate_number
     title: 法人番号
     description: 13桁。国税庁法人番号(houjin_bangou)と結合できる
-    annotations: { queria: { semantic: { role: entity, name: corporate_number } } }
+    entity: corporate_number
   - name: name
     title: 商号または名称
   - name: period_number

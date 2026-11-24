@@ -2,7 +2,6 @@ version: 2
 
 models:
   - name: mart_gbizinfo_subsidy
-    description: gBizINFO の補助金交付実績(補助金 1 件 1 行)。corporate_number で国税庁法人番号(houjin_bangou)と結合できる
     columns:
       - name: corporate_number
       - name: name
