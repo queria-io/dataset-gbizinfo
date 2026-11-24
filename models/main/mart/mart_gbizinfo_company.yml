@@ -2,7 +2,6 @@ version: 2
 
 models:
   - name: mart_gbizinfo_company
-    description: gBizINFO の法人活動情報を法人 1 行に集約。基本属性(資本金・従業員数・設立年・業種)に補助金・調達の集計と最新財務・職場指標を加えたもの。corporate_number で国税庁法人番号(houjin_bangou)・全国地方公共団体コード(lg-code)と結合できる
     columns:
       - name: corporate_number
       - name: name

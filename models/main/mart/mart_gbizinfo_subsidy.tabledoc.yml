@@ -1,25 +1,25 @@
-schema: main
-name: mart_gbizinfo_commendation
-title: 表彰実績
+$schema: https://tabledoc.queria.io/schemas/table/v1.json
+title: 補助金交付実績
 description: |-
-  gBizINFO の表彰の実績です。1 行が 1 件の表彰です。
+  gBizINFO の補助金の交付実績です。1 行が 1 件の補助金です。
 
   - 法人番号（corporate_number）で houjin_bangou と結合できます
 sources:
-  - path: https://info.gbiz.go.jp/
-fields:
+  - info
+columns:
   - name: corporate_number
     title: 法人番号
     description: 13桁。国税庁法人番号(houjin_bangou)と結合できる
-    annotations: { queria: { semantic: { role: entity, name: corporate_number } } }
+    entity: corporate_number
   - name: name
     title: 商号または名称
   - name: title
-    title: 表彰名称
+    title: 補助金名称
+  - name: amount
+    title: 金額
+    description: 円
   - name: target
     title: 対象
-  - name: division
-    title: 部門
   - name: issuer
     title: 発行元
   - name: certification_date

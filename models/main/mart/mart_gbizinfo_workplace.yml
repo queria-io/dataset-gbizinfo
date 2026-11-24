@@ -2,7 +2,6 @@ version: 2
 
 models:
   - name: mart_gbizinfo_workplace
-    description: gBizINFO の職場情報(法人 1 行)。女性活躍・両立支援の公表項目を落とさずに出す。指標を 1 つ以上報告している法人のみ。corporate_number で国税庁法人番号(houjin_bangou)と結合できる
     columns:
       - name: corporate_number
       - name: name

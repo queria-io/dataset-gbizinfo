@@ -1,17 +1,16 @@
-schema: main
-name: mart_gbizinfo_company
+$schema: https://tabledoc.queria.io/schemas/table/v1.json
 title: 法人活動サマリ
 description: |-
   gBizINFO の法人活動情報を 1 法人 1 行にまとめたものです。資本金・従業員数・設立年・業種に、補助金と調達の集計、最新の財務、職場の指標を加えています。
 
   - 法人番号（corporate_number）で houjin_bangou と結合できます。所在地は houjin_bangou にあります
 sources:
-  - path: https://info.gbiz.go.jp/
-fields:
+  - info
+columns:
   - name: corporate_number
     title: 法人番号
     description: 13桁。国税庁法人番号(houjin_bangou)と結合できる
-    annotations: { queria: { semantic: { role: entity, name: corporate_number } } }
+    entity: corporate_number
   - name: name
     title: 商号または名称
   - name: capital_stock
