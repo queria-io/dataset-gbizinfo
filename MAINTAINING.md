@@ -19,7 +19,7 @@ activity モードでも基本情報・特許テーブルが揃っていなけ�
 ## セットアップと実行
 
 ```bash
-git submodule update --init
+git clone https://github.com/queria-io/dataset-shared.git shared  # 初回のみ。更新は git -C shared pull
 uv sync
 echo "FDL_TOKEN=<Queria の API トークン>" > .env
 echo "GBIZINFO_API_TOKEN=<gBizINFO アクセストークン>" >> .env
